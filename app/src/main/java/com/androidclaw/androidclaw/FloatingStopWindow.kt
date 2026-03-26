@@ -15,36 +15,36 @@ class FloatingStopWindow(private val context: Context) {
     fun show(onStop: () -> Unit) {
         if (stopButton != null) return
 
-        // 1. 先创建按钮
+        // 1. Create button first
         val btn = Button(context)
-        btn.text = "急停 (STOP)"
+        btn.text = "STOP"
         btn.setBackgroundColor(Color.RED)
         btn.setTextColor(Color.WHITE)
         btn.setOnClickListener { onStop() }
         stopButton = btn
 
-        // 2. 显式创建 LayoutParams (避免在构造函数里写一长串参数)
-        // 避开 K2 编译器对复杂构造函数的解析 Bug
+        // 2. Explicitly create LayoutParams (avoid writing long parameters in constructor)
+        // Avoid K2 compiler parsing bug for complex constructors
         val params = WindowManager.LayoutParams()
 
         params.width = WindowManager.LayoutParams.WRAP_CONTENT
         params.height = WindowManager.LayoutParams.WRAP_CONTENT
 
-        // 设置层级：必须使用 TYPE_APPLICATION_OVERLAY
+        // Set layer: must use TYPE_APPLICATION_OVERLAY
         params.type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
 
-        // 设置标志：不拦截焦点
+        // Set flags: do not intercept focus
         params.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
 
-        // 设置格式：透明
+        // Set format: transparent
         params.format = PixelFormat.TRANSLUCENT
 
-        // 设置位置
+        // Set position
         params.gravity = Gravity.TOP or Gravity.END
         params.x = 20
         params.y = 200
 
-        // 3. 添加到窗口
+        // 3. Add to window
         try {
             windowManager.addView(btn, params)
         } catch (e: Exception) {

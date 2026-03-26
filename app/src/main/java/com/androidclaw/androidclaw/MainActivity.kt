@@ -152,7 +152,7 @@ class MainActivity : ComponentActivity() {
     fun ActionConfirmDialog(action: AiAction, onConfirm: () -> Unit, onDismiss: () -> Unit) {
         AlertDialog(
             onDismissRequest = onDismiss,
-            title = { Text("Sensitive Action Request") },
+            title = { Text("Action Request") },
             text = {
                 Column {
                     Text(
@@ -163,8 +163,12 @@ class MainActivity : ComponentActivity() {
                         "Reason: ${action.reason ?: "No reason provided"}",
                         modifier = Modifier.padding(vertical = 4.dp)
                     )
-                    if (action.type == "sh") Text("Command: ${action.command}", color = Color.Red)
                     if (action.type == "click") Text("Coordinates: (${action.x}, ${action.y})")
+                    if (action.type == "swipe") Text("Swipe: (${action.startX}, ${action.startY}) → (${action.endX}, ${action.endY})")
+                    if (action.type == "scroll") Text("Direction: ${action.direction?.uppercase()}")
+                    if (action.type == "input") Text("Text: \"${action.text}\"", color = Color.Blue)
+                    if (action.type == "system") Text("System: ${action.systemAction?.replaceFirstChar { it.uppercase() }} ${action.systemValue ?: ""}", color = Color(0xFF4CAF50))
+                    if (action.type == "sh") Text("Command: ${action.command}", color = Color.Red)
                 }
             },
             confirmButton = { Button(onClick = onConfirm) { Text("Allow") } },
@@ -232,7 +236,7 @@ class MainActivity : ComponentActivity() {
             val response = Utils.callLLMWithHistory(userInput, screenData, historyContext, config,this@MainActivity)
             val action = Utils.parseAction(response)
             if (action.type == "error") {
-                // 这里处理错误，比如停止运行动画，通知用户
+                // Handle errors, like stopping animations, notifying user
                 addMessage("system", "Error occurred: ${action.reason}")
                 stopAiAgent()
             } else {
@@ -267,28 +271,41 @@ class MainActivity : ComponentActivity() {
                 addMessage("ai", action.reason ?: "I will use a system shortcut.", action)
                 executeIntent(action)
 
-                // 特殊逻辑：如果是设置闹钟或发邮件，通常一步到位
-                if (action.action?.contains("ALARM") == true || action.action?.contains("SEND") == true) {
+                // Check if we should continue after this intent
+                val shouldContinue = action.packageName?.isNotEmpty() == true ||
+                    action.data?.isNotEmpty() == true ||
+                    action.extras?.containsKey("continue_after_intent") == true
+
+                // Special logic: For alarm or simple intents, stop after
+                if (action.action?.contains("ALARM") == true || 
+                    action.action?.contains("SEND") == true ||
+                    action.action?.contains("settings") == true) {
                     addMessage("system", "✅ Task dispatched via system.")
                     stopAiAgent()
-                } else {
-                    // 如果是“打开某个 App”，我们需要继续观察那个 App 的界面
+                } else if (shouldContinue) {
+                    // If opening an App for interaction, continue observing
                     addMessage("system", "App opened, checking next step...")
-                    // 节省token
                     stopAiAgent()
                     lifecycleScope.launch {
-                        delay(3000) // 等待目标 App 启动
+                        delay(3000) // Wait for target App to launch
                         executeAgentStep(uiState.userInput)
                     }
+                } else {
+                    stopAiAgent()
                 }
             }
 
-            "click", "sh" -> {
-                // 只有当 AI 决定点按时，如果当前还在本 App 界面，
-                // 此时建议加入一个逻辑：如果 AI 想要点击的是桌面元素，
-                // 它应该已经先通过 Intent 跳转出去了。
-                pendingAction = action
-                uiState = uiState.copy(status = "Awaiting authorization for ${action.type}")
+            "click", "swipe", "scroll", "input", "system", "sh" -> {
+                // Only when AI decides to click, if we're still in this App,
+                // add a logic: if AI wants to click a desktop element,
+                // it should have already jumped out via Intent first.
+                // System actions don't need confirmation (instant toggle)
+                if (action.type == "system") {
+                    performConfirmedAction(action)
+                } else {
+                    pendingAction = action
+                    uiState = uiState.copy(status = "Awaiting authorization for ${action.type}")
+                }
             }
 
             "finish" -> {
@@ -320,6 +337,38 @@ class MainActivity : ComponentActivity() {
                         }
                         success = true
                     }
+                    "swipe" -> {
+                        withContext(Dispatchers.Main) {
+                            MyAiAccessibilityService.instance?.performSwipe(
+                                action.startX,
+                                action.startY,
+                                action.endX,
+                                action.endY,
+                                action.duration
+                            )
+                        }
+                        success = true
+                    }
+                    "scroll" -> {
+                        withContext(Dispatchers.Main) {
+                            MyAiAccessibilityService.instance?.performScroll(action.direction ?: "up")
+                        }
+                        success = true
+                    }
+                    "input" -> {
+                        withContext(Dispatchers.Main) {
+                            MyAiAccessibilityService.instance?.performInputText(action.text ?: "")
+                        }
+                        success = true
+                    }
+                    "system" -> {
+                        withContext(Dispatchers.Main) {
+                            success = MyAiAccessibilityService.instance?.performSystemAction(
+                                action.systemAction ?: "",
+                                action.systemValue
+                            ) ?: false
+                        }
+                    }
                     "sh" -> {
                         success = ShellUtils.executeCommand(action.command ?: "", useRoot = true)
                     }
@@ -329,11 +378,19 @@ class MainActivity : ComponentActivity() {
             }
 
             if (success && isAgentRunning) {
-                withContext(Dispatchers.Main) {
-                    addMessage("system", "Action success. Waiting for UI refresh...")
+                if (action.type == "system") {
+                    // System actions are instant, don't need to wait for UI refresh
+                    withContext(Dispatchers.Main) {
+                        addMessage("system", "✅ ${action.systemAction?.replaceFirstChar { it.uppercase() }} ${action.systemValue ?: "toggled"}!")
+                    }
+                    stopAiAgent()
+                } else {
+                    withContext(Dispatchers.Main) {
+                        addMessage("system", "Action success. Waiting for UI refresh...")
+                    }
+                    delay(2500)
+                    executeAgentStep(uiState.userInput)
                 }
-                delay(2500)
-                executeAgentStep(uiState.userInput)
             } else {
                 withContext(Dispatchers.Main) { stopAiAgent() }
             }
@@ -342,25 +399,47 @@ class MainActivity : ComponentActivity() {
 
     private fun executeIntent(action: AiAction) {
         try {
-           Intent(action.action).let {
-               if (!action.data.isNullOrEmpty()) {
-                   it.data = action.data.toUri()
-               }
-                it.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                action.fillIntentExtras(it)
-                startActivity(it)
-//                action.extras?.forEach { (key, value) ->
-//                    when (value) {
-//                        is Boolean -> putExtra(key, value)
-//                        is Int -> putExtra(key, value)
-//                        is Double -> putExtra(key, value.toInt())
-//                        else -> putExtra(key, value.toString())
-//                    }
-//                }
-
+            val intent = when {
+                !action.packageName.isNullOrEmpty() -> {
+                    // Open app by package name
+                    packageManager.getLaunchIntentForPackage(action.packageName)?.apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    } ?: throw Exception("App not found: ${action.packageName}")
+                }
+                !action.data.isNullOrEmpty() && action.data != "null" -> {
+                    // Open URL or URI
+                    Intent(action.action ?: Intent.ACTION_VIEW).apply {
+                        data = action.data.toUri()
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                }
+                !action.action.isNullOrEmpty() -> {
+                    // System intent (settings, alarm, etc.)
+                    Intent(action.action).apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        action.fillIntentExtras(this)
+                    }
+                }
+                else -> throw Exception("No valid intent parameters")
             }
+            
+            action.fillIntentExtras(intent)
+            startActivity(intent)
+            addMessage("system", "Opening app...")
         } catch (e: Exception) {
             addMessage("system", "Intent failed: ${e.message}")
+            // Try alternate method for WhatsApp
+            try {
+                if (action.packageName?.contains("whatsapp") == true) {
+                    val altIntent = Intent(Intent.ACTION_VIEW).apply {
+                        data = android.net.Uri.parse("https://wa.me/")
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    startActivity(altIntent)
+                }
+            } catch (e2: Exception) {
+                addMessage("system", "WhatsApp open failed: ${e2.message}")
+            }
         }
     }
 

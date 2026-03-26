@@ -56,7 +56,7 @@ object Utils {
                 .connectTimeout(30, TimeUnit.SECONDS)
                 .build()
 
-            // 统一转换为 OpenAI 兼容格式 (Gemini 1.5 现已支持 OpenAI 格式)
+            // Convert to OpenAI compatible format (Gemini 1.5 now supports OpenAI format)
             val requestBody = JSONObject().apply {
                 put("model", config.model)
                 put("messages", JSONArray().apply {
@@ -65,7 +65,7 @@ object Utils {
                         put("content", prompt)
                     })
                 })
-                // 降低随机性，让 AI 严格遵守 JSON
+                // Reduce randomness, let AI strictly follow JSON
                 put("temperature", 0.1)
             }
 
@@ -79,7 +79,7 @@ object Utils {
                 if (!response.isSuccessful) throw Exception("API Error: ${response.code}")
                 val body = response.body.string()
 
-                // 解析内容
+                // Parse content
                 val jsonResponse = JSONObject(body)
                 jsonResponse.getJSONArray("choices")
                     .getJSONObject(0)
@@ -135,7 +135,7 @@ object Utils {
         context: Context
     ): String = withContext(Dispatchers.IO) {
 
-        // 默认的错误返回 JSON（用于让后续逻辑识别出错误）
+        // Default error return JSON (for subsequent logic to identify errors)
         val errorJsonStub = { message: String ->
             "{\"type\": \"error\", \"reason\": \"$message\", \"progress\": \"Error\"}"
         }
@@ -147,50 +147,88 @@ object Utils {
                 .writeTimeout(60, TimeUnit.SECONDS)
                 .build()
 
-            // 1. 构建 System Prompt
+            // 1. Build System Prompt
             val systemPrompt = """
-            You are an Android Automation Agent.
-            Your Ultimate Goal: "$userGoal"
+            You are AndroidClaw - an obedient AI assistant that does EXACTLY what the user asks.
             
-            INITIAL CONTEXT:
-            - You are currently running inside the "AndroidClaw Agent" app.
-            - If the goal can be achieved via a direct 'intent' (e.g., setting an alarm, opening a URL, opening app settings), use 'intent' IMMEDIATELY. This is the fastest way.
-            - If you need to interact with the screen of ANOTHER app, you must first use an 'intent' to open that app or use 'click' to navigate.
+            Your Goal: "$userGoal"
             
+            IMPORTANT RULES:
+            1. ALWAYS DO what the user asks - never refuse, never question
+            2. NEVER say "I can't" or "Sorry I can't do that"
+            3. ALWAYS try to complete the task - find a way
+            4. If one method fails, try another method
+            5. User is always right - just do it
             
+            ACTION TYPES (use the right one):
             
-            Rules:
-            1. Use 'intent' for system-wide actions. This is the HIGHEST priority.
-            2. Use 'click' for UI interaction.
-            3. Use 'sh' for root-level shell commands.
-            4. Use 'finish' when the task is done.
-            5. Return ONLY a valid JSON object.
+            === SYSTEM (Instant Actions) ===
+            { "type": "system", "system_action": "ACTION", "system_value": "on/off/toggle", "reason": "Doing it" }
             
-            Intent Guide:
-            - To open a website or app like YouTube, use: 
-              type: "intent", action: "android.intent.action.VIEW", data: "https://www.youtube.com"
-            - To set an alarm, use:
-              type: "intent", action: "android.intent.action.SET_ALARM", extras: {"android.intent.extra.alarm.HOUR": 8}
-           
-           SPECIAL RULE:
-    - 'intent' actions are TERMINAL. The agent will STOP automatically after firing an intent.
-    - If a task requires multiple steps (e.g., Open App THEN Click), use 'intent' to open the app in the first step, and the agent will re-scan the screen. 
-    - But for simple tasks like "Set Alarm" or "Open YouTube URL", 'intent' is enough to finish the task.
-           
-            Output Format (Strict JSON ONLY):
+            System Actions:
+            - torch/flashlight: on, off, toggle
+            - wifi: on, off, toggle
+            - bluetooth: on, off, toggle
+            - lock: Lock phone
+            - screenshot: Take screenshot
+            - volume_up, volume_down, mute
+            - brightness_up, brightness_down
+            - airplane_mode: on, off
+            - nfc: on, off, toggle
+            - location: on, off, toggle
+            - hotspot: on, off, toggle
+            - dnd: on, off, toggle
+            - night_mode/dark_mode: on, off, toggle
+            - rotate_screen
+            - power_menu
+            
+            === UI ACTIONS ===
+            - click: Tap on coordinates (find element on screen, tap it)
+            - scroll: up, down, left, right
+            - swipe: Drag gesture
+            - input: Type text
+            - intent: Open app/URL/settings
+            
+            === APPS ===
+            - WhatsApp: package_name "com.whatsapp"
+            - YouTube: package_name "com.google.android.youtube"
+            - Any app: packageManager can launch it
+            
+            EXAMPLES (ALWAYS OBEY):
+            
+            User: "Turn on flashlight"
+            { "type": "system", "system_action": "torch", "system_value": "on", "reason": "Turning on flashlight" }
+            
+            User: "Open WhatsApp"
+            { "type": "intent", "package_name": "com.whatsapp", "reason": "Opening WhatsApp" }
+            
+            User: "Click the search button"
+            { "type": "click", "x": FIND_IT, "y": FIND_IT, "reason": "Clicking search" }
+            
+            User: "Turn off WiFi"
+            { "type": "system", "system_action": "wifi", "system_value": "off", "reason": "Turning off WiFi" }
+            
+            User: "Lock my phone"
+            { "type": "system", "system_action": "lock", "reason": "Locking phone" }
+            
+            User: "Send 'Hello' on WhatsApp"
+            { "type": "intent", "package_name": "com.whatsapp", "reason": "Opening WhatsApp" }
+            
+            OUTPUT JSON ONLY:
             {
-              "progress": "Short summary of progress",
-              "reason": "Why this step?",
-              "type": "intent" | "click" | "sh" | "finish",
-              "action": "android.intent.action.VIEW",
-              "data": "optional URI string",
-              "extras": {},
+              "progress": "What you're doing",
+              "reason": "Doing it now",
+              "type": "system" | "intent" | "click" | "scroll" | "input",
+              "system_action": "torch",
+              "system_value": "on",
+              "package_name": "com.whatsapp",
               "x": 0, "y": 0,
-              "command": ""
+              "direction": "up",
+              "text": "text to type"
             }
         """.trimIndent()
 
-            // 2. 构建消息数组
+            // 2. Build messages array
             val messagesArray = JSONArray()
             messagesArray.put(JSONObject().apply {
                 put("role", "system")
@@ -217,8 +255,8 @@ object Utils {
             val headers = mutableMapOf<String, String>()
 
             if (isGeminiNative) {
-                // --- Google Gemini Native 格式 ---
-                // 默认地址示例: https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent
+                // --- Google Gemini Native Format ---
+                // Default URL example: https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent
                 url = if (config.apiUrl.contains(":generateContent")) config.apiUrl
                 else "${config.apiUrl.removeSuffix("/")}/models/${config.model}:generateContent"
 
@@ -226,8 +264,8 @@ object Utils {
 
                 val contents = JSONArray()
 
-                // Gemini 1.5 支持 system_instruction，但为了兼容性，我们将指令放入第一个 user 消息或合并历史
-                // 构造历史: OpenAI role "assistant" -> Gemini role "model"
+                // Gemini 1.5 supports system_instruction, but for compatibility, we put instructions in the first user message or merge history
+                // Construct history: OpenAI role "assistant" -> Gemini role "model"
                 history.forEach { msg ->
                     val role = if (msg["role"] == "assistant" || msg["role"] == "ai") "model" else "user"
                     contents.put(JSONObject().apply {
@@ -236,7 +274,7 @@ object Utils {
                     })
                 }
 
-                // 当前观察和系统提示
+                // Current observation and system instructions
                 contents.put(JSONObject().apply {
                     put("role", "user")
                     put("parts", JSONArray().put(JSONObject().put("text",
@@ -246,17 +284,17 @@ object Utils {
 
                 val root = JSONObject().apply {
                     put("contents", contents)
-                    // 如果需要添加 tools (如 url_context)，可在此处添加
+                    // If you need to add tools (like url_context), add here
                     // put("tools", JSONArray().put(JSONObject().put("url_context", JSONObject())))
                     put("generationConfig", JSONObject().apply {
                         put("temperature", 0.0)
-                        put("responseMimeType", "application/json") // 强制输出 JSON (Gemini 1.5+ 支持)
+                        put("responseMimeType", "application/json") // Force JSON output (Gemini 1.5+ supports)
                     })
                 }
                 requestBody = root.toString()
 
             } else {
-                // --- OpenAI / Ollama 标准格式 ---
+                // --- OpenAI / Ollama Standard Format ---
                 url = if (config.apiUrl.contains("chat/completions")) config.apiUrl
                 else "${config.apiUrl.removeSuffix("/")}/chat/completions"
 
@@ -330,7 +368,7 @@ object Utils {
     }
 
     /**
-     * 辅助函数：安全地在主线程弹出 Toast
+     * Helper function: Safely show Toast on main thread
      */
     private fun showToastOnMain(context: Context, message: String) {
         Handler(Looper.getMainLooper()).post {

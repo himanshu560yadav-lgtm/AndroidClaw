@@ -24,7 +24,7 @@
 
 <video width="300" controls>
   <source src="./assets/show.mp4" type="video/mp4">
-  您的浏览器不支持视频播放。
+  Your browser does not support video playback.
 </video>
 
 
