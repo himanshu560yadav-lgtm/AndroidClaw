@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.androidclaw.androidclaw"  // FIXED
+    namespace = "com.androidclaw.androidclaw"
     compileSdk = 36
 
     defaultConfig {
@@ -37,9 +37,6 @@ android {
     buildFeatures {
         compose = true
     }
-//    compilerOptions {
-//        jvmTarget.set(JvmTarget.JVM_17)
-//    }
 }
 
 dependencies {
