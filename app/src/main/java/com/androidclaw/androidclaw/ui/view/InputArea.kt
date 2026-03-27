@@ -37,23 +37,23 @@ fun InputArea(
     isRecording: Boolean,
     modifier: Modifier = Modifier
 ) {
-    // Internal management of input text content
+    // 内部管理输入框文字内容
     var inputText by remember { mutableStateOf("") }
 
     Surface(
         modifier = modifier
             .fillMaxWidth()
-            .imePadding(), // Auto handle keyboard popup spacing
-        tonalElevation = 3.dp, // Slightly elevate to distinguish from chat list
+            .imePadding(), // 自动处理键盘弹出时的间距
+        tonalElevation = 3.dp, // 稍微提升高度以区分聊天列表
         shadowElevation = 8.dp
     ) {
         Row(
             modifier = Modifier
                 .padding(horizontal = 8.dp, vertical = 8.dp)
-                .navigationBarsPadding(), // Handle system navigation bar occlusion
+                .navigationBarsPadding(), // 处理系统导航栏遮挡
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // --- Voice button ---
+            // --- 语音按钮 ---
             IconButton(
                 onClick = onVoiceClick,
                 modifier = Modifier.size(48.dp)
@@ -61,21 +61,21 @@ fun InputArea(
                 Icon(
                     imageVector = if (isRecording) Icons.Default.Close else Icons.Default.AddCircle,
                     contentDescription = "Voice Input",
-                    // Show red during recording as warning
+                    // 录音时显示红色以示提醒
                     tint = if (isRecording) Color.Red else MaterialTheme.colorScheme.primary
                 )
             }
 
-            // --- Text input field ---
+            // --- 文本输入框 ---
             OutlinedTextField(
                 value = inputText,
                 onValueChange = { inputText = it },
-                placeholder = { Text("Enter or voice your command...") },
+                placeholder = { Text("请输入或语音描述指令...") },
                 modifier = Modifier
                     .weight(1f)
                     .padding(horizontal = 4.dp),
-                maxLines = 4, // Max 4 lines auto growth
-                shape = RoundedCornerShape(24.dp), // Rounded design, more like chat apps
+                maxLines = 4, // 最多支持 4 行自动增长
+                shape = RoundedCornerShape(24.dp), // 圆角设计，更像聊天软件
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = Color.Transparent,
                     unfocusedBorderColor = Color.Transparent,
@@ -84,15 +84,15 @@ fun InputArea(
                 )
             )
 
-            // --- Send button ---
+            // --- 发送按钮 ---
             IconButton(
                 onClick = {
                     if (inputText.isNotBlank()) {
                         onSend(inputText)
-                        inputText = "" // Clear input after clicking
+                        inputText = "" // 点击后清空输入框
                     }
                 },
-                // Disable send when input is empty or recording
+                // 当输入为空或正在录音时禁用发送
                 enabled = inputText.isNotBlank() && !isRecording,
                 modifier = Modifier.size(48.dp)
             ) {

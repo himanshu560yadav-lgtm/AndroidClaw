@@ -3,120 +3,66 @@ package com.androidclaw.androidclaw.model
 import android.content.Intent
 import com.google.gson.annotations.SerializedName
 
-// AI returned action model
+// AI 返回的操作模型
 data class AiAction(
     /**
-     * Action type: "intent", "click", "swipe", "scroll", "input", "sh", "finish", "error"
+     * 操作类型: "intent", "click", "sh", "finish", "error"
      */
     @SerializedName("type")
     val type: String = "error",
 
     /**
-     * AI's summary of current task progress (helps maintain conversation state)
+     * AI 对当前任务进度的总结（有助于保持会话状态）
      */
     @SerializedName("progress")
     val progress: String? = null,
 
     /**
-     * Reason for executing this action (displayed in chat bubble in user's language)
+     * 执行此操作的原因（以用户语言显示在聊天气泡中）
      */
     @SerializedName("reason")
     val reason: String? = null,
 
     val data: String? = null, // Used for Uri (e.g., https://youtube.com)
     /**
-     * Intent Action string (e.g., "android.intent.action.VIEW")
+     * Intent 的 Action 字符串 (如 "android.intent.action.VIEW")
      */
     @SerializedName("action")
     val action: String? = null,
 
     /**
-     * Intent parameters key-value pairs
-     * AI returned numbers are usually parsed as Double, boolean values as Boolean
+     * Intent 的参数键值对
+     * AI 传回的数字通常会被解析为 Double，布尔值为 Boolean
      */
     @SerializedName("extras")
     val extras: Map<String, Any>? = null,
 
     /**
-     * X coordinate for click operation
+     * 点击操作的 X 坐标
      */
     @SerializedName("x")
     val x: Int = 0,
 
     /**
-     * Y coordinate for click operation
+     * 点击操作的 Y 坐标
      */
     @SerializedName("y")
     val y: Int = 0,
 
     /**
-     * Swipe/Scroll: Start X coordinate
-     */
-    @SerializedName("startX")
-    val startX: Int = 0,
-
-    /**
-     * Swipe/Scroll: Start Y coordinate
-     */
-    @SerializedName("startY")
-    val startY: Int = 0,
-
-    /**
-     * Swipe/Scroll: End X coordinate
-     */
-    @SerializedName("endX")
-    val endX: Int = 0,
-
-    /**
-     * Swipe/Scroll: End Y coordinate
-     */
-    @SerializedName("endY")
-    val endY: Int = 0,
-
-    /**
-     * Swipe/Scroll: Duration in milliseconds
-     */
-    @SerializedName("duration")
-    val duration: Int = 300,
-
-    /**
-     * Scroll direction: "up", "down", "left", "right"
-     */
-    @SerializedName("direction")
-    val direction: String? = null,
-
-    /**
-     * Text to input (for input action)
-     */
-    @SerializedName("text")
-    val text: String? = null,
-
-    /**
-     * System action (for system action): torch, wifi, bluetooth, lock, screenshot, volume, etc.
-     */
-    @SerializedName("system_action")
-    val systemAction: String? = null,
-
-    /**
-     * System action value (on/off/toggle, up/down, etc.)
-     */
-    @SerializedName("system_value")
-    val systemValue: String? = null,
-
-    /**
-     * Shell script content (e.g., "input tap 500 500" or system settings commands)
+     * Shell 脚本内容 (如 "input tap 500 500" 或系统设置命令)
      */
     @SerializedName("command")
     val command: String? = null,
 
     /**
-     * Optional: Target app's package name (for explicit launch)
+     * 可选：目标应用的包名（用于显式启动）
      */
     @SerializedName("package_name")
     val packageName: String? = null,
 
     /**
-     * Optional: Target Activity's class name
+     * 可选：目标 Activity 的类名
      */
     @SerializedName("class_name")
     val className: String? = null
@@ -124,18 +70,14 @@ data class AiAction(
     companion object {
         const val TYPE_INTENT = "intent"
         const val TYPE_CLICK = "click"
-        const val TYPE_SWIPE = "swipe"
-        const val TYPE_SCROLL = "scroll"
-        const val TYPE_INPUT = "input"
-        const val TYPE_SYSTEM = "system"
         const val TYPE_SH = "sh"
         const val TYPE_FINISH = "finish"
         const val TYPE_ERROR = "error"
     }
 
     /**
-     * Helper method: Fill extras from Map into Intent
-     * Handles the common AI issue of Double to Int conversion
+     * 辅助方法：将 Map 中的 extras 填充到 Intent 中
+     * 处理了 AI 常见的 Double 转 Int 的问题
      */
     fun fillIntentExtras(intent: Intent) {
         extras?.forEach { (key, value) ->
@@ -144,7 +86,7 @@ data class AiAction(
                 is String -> intent.putExtra(key, value)
                 is Int -> intent.putExtra(key, value)
                 is Double -> {
-                    // AI returned JSON numbers are usually parsed as Double, try to convert to Int
+                    // AI 返回的 JSON 数字通常解析为 Double，需尝试转为 Int
                     if (value == value.toInt().toDouble()) {
                         intent.putExtra(key, value.toInt())
                     } else {
@@ -158,7 +100,7 @@ data class AiAction(
     }
 }
 
-// UI state model
+// UI 状态模型
 data class AgentUiState(
     val isRunning: Boolean = false,
     val status: String = "waiting command...",
@@ -166,7 +108,7 @@ data class AgentUiState(
     val aiProvider: String = "Gemini" // Gemini, OpenAI, Local
 )
 
-// API configuration
+// API 配置
 data class ApiConfig(
     val provider: String = "Gemini", // Gemini, OpenAI, Ollama
     val apiKey: String = "",
@@ -174,7 +116,7 @@ data class ApiConfig(
     val model: String = "gemini-3-flash-preview"
 )
 
-// Chat message
+// 聊天消息
 data class ChatMessage(
     val role: String, // "user", "ai", "system"
     val content: String,

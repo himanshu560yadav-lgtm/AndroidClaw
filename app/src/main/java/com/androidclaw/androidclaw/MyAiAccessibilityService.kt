@@ -2,14 +2,14 @@ package com.androidclaw.androidclaw
 
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.GestureDescription
-import android.graphics.Path
 import android.content.Context
+import android.graphics.Path
 import android.graphics.Rect
 import android.hardware.camera2.CameraManager
 import android.view.accessibility.AccessibilityEvent
-import android.view.accessibility.AccessibilityNodeInfo
 import android.view.Display
 import android.view.WindowManager
+import android.view.accessibility.AccessibilityNodeInfo
 
 
 class MyAiAccessibilityService : AccessibilityService() {

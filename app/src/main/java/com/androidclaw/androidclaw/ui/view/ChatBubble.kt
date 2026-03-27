@@ -44,62 +44,38 @@ fun ChatBubble(msg: ChatMessage, onConfirmAction: (AiAction) -> Unit) {
             shape = RoundedCornerShape(12.dp)
         ) {
             Column(modifier = Modifier.padding(12.dp)) {
-                // Display AI's reason (user's language)
+                // 显示 AI 的理由（用户语言）
                 Text(text = msg.content, style = MaterialTheme.typography.bodyMedium)
 
-                // If there's a specific Action, show details
+                // 如果有具体的 Action，显示详情
                 msg.action?.let { action ->
                     Spacer(modifier = Modifier.height(8.dp))
                     HorizontalDivider()
                     Text(
-                        text = "Action: ${action.type.uppercase()}",
+                        text = "执行操作: ${action.type.uppercase()}",
                         style = MaterialTheme.typography.labelSmall,
                         color = Color.Gray
                     )
 
-                    // If click, show coordinates
+                    // 如果是点击或 Shell，显示额外信息
                     if (action.type == "click") Text(
-                        "Coordinates: (${action.x}, ${action.y})",
+                        "坐标: (${action.x}, ${action.y})",
                         style = MaterialTheme.typography.labelSmall
                     )
-                    // If swipe, show swipe details
-                    if (action.type == "swipe") Text(
-                        "Swipe: (${action.startX}, ${action.startY}) → (${action.endX}, ${action.endY})",
-                        style = MaterialTheme.typography.labelSmall
-                    )
-                    // If scroll, show direction
-                    if (action.type == "scroll") Text(
-                        "Scroll: ${action.direction?.uppercase()}",
-                        style = MaterialTheme.typography.labelSmall
-                    )
-                    // If input, show text
-                    if (action.type == "input") Text(
-                        "Input: \"${action.text}\"",
-                        style = MaterialTheme.typography.labelSmall
-                    )
-                    // If system, show system action
-                    if (action.type == "system") {
-                        Text(
-                            "System: ${action.systemAction?.replaceFirstChar { it.uppercase() }} ${action.systemValue ?: ""}",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = Color.Green
-                        )
-                    }
-                    // If shell, show command
                     if (action.type == "sh") Text(
-                        "Command: ${action.command}",
+                        "指令: ${action.command}",
                         style = MaterialTheme.typography.labelSmall,
                         color = Color.Red
                     )
 
-                    // Quick confirm button for sensitive actions
-                    if (action.type in listOf("click", "swipe", "scroll", "input", "sh")) {
+                    // 敏感操作的快捷确认按钮（如果在 Chat 中需要确认）
+                    if (action.type == "click" || action.type == "sh") {
                         Button(
                             onClick = { onConfirmAction(action) },
                             modifier = Modifier.padding(top = 8.dp).height(32.dp),
                             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp)
                         ) {
-                            Text("Execute Now", style = MaterialTheme.typography.labelMedium)
+                            Text("立即执行", style = MaterialTheme.typography.labelMedium)
                         }
                     }
                 }

@@ -56,7 +56,7 @@ object Utils {
                 .connectTimeout(30, TimeUnit.SECONDS)
                 .build()
 
-            // Convert to OpenAI compatible format (Gemini 1.5 now supports OpenAI format)
+            // 统一转换为 OpenAI 兼容格式 (Gemini 1.5 现已支持 OpenAI 格式)
             val requestBody = JSONObject().apply {
                 put("model", config.model)
                 put("messages", JSONArray().apply {
@@ -65,7 +65,7 @@ object Utils {
                         put("content", prompt)
                     })
                 })
-                // Reduce randomness, let AI strictly follow JSON
+                // 降低随机性，让 AI 严格遵守 JSON
                 put("temperature", 0.1)
             }
 
@@ -79,7 +79,7 @@ object Utils {
                 if (!response.isSuccessful) throw Exception("API Error: ${response.code}")
                 val body = response.body.string()
 
-                // Parse content
+                // 解析内容
                 val jsonResponse = JSONObject(body)
                 jsonResponse.getJSONArray("choices")
                     .getJSONObject(0)
@@ -135,7 +135,7 @@ object Utils {
         context: Context
     ): String = withContext(Dispatchers.IO) {
 
-        // Default error return JSON (for subsequent logic to identify errors)
+        // 默认的错误返回 JSON（用于让后续逻辑识别出错误）
         val errorJsonStub = { message: String ->
             "{\"type\": \"error\", \"reason\": \"$message\", \"progress\": \"Error\"}"
         }
@@ -147,7 +147,7 @@ object Utils {
                 .writeTimeout(60, TimeUnit.SECONDS)
                 .build()
 
-            // 1. Build System Prompt
+            // 1. 构建 System Prompt
             val systemPrompt = """
             You are AndroidClaw - an obedient AI assistant that does EXACTLY what the user asks.
             
@@ -240,7 +240,7 @@ object Utils {
             }
         """.trimIndent()
 
-            // 2. Build messages array
+            // 2. 构建消息数组
             val messagesArray = JSONArray()
             messagesArray.put(JSONObject().apply {
                 put("role", "system")
@@ -267,8 +267,8 @@ object Utils {
             val headers = mutableMapOf<String, String>()
 
             if (isGeminiNative) {
-                // --- Google Gemini Native Format ---
-                // Default URL example: https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent
+                // --- Google Gemini Native 格式 ---
+                // 默认地址示例: https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent
                 url = if (config.apiUrl.contains(":generateContent")) config.apiUrl
                 else "${config.apiUrl.removeSuffix("/")}/models/${config.model}:generateContent"
 
@@ -276,8 +276,8 @@ object Utils {
 
                 val contents = JSONArray()
 
-                // Gemini 1.5 supports system_instruction, but for compatibility, we put instructions in the first user message or merge history
-                // Construct history: OpenAI role "assistant" -> Gemini role "model"
+                // Gemini 1.5 支持 system_instruction，但为了兼容性，我们将指令放入第一个 user 消息或合并历史
+                // 构造历史: OpenAI role "assistant" -> Gemini role "model"
                 history.forEach { msg ->
                     val role = if (msg["role"] == "assistant" || msg["role"] == "ai") "model" else "user"
                     contents.put(JSONObject().apply {
@@ -286,7 +286,7 @@ object Utils {
                     })
                 }
 
-                // Current observation and system instructions
+                // 当前观察和系统提示
                 contents.put(JSONObject().apply {
                     put("role", "user")
                     put("parts", JSONArray().put(JSONObject().put("text",
@@ -296,17 +296,17 @@ object Utils {
 
                 val root = JSONObject().apply {
                     put("contents", contents)
-                    // If you need to add tools (like url_context), add here
+                    // 如果需要添加 tools (如 url_context)，可在此处添加
                     // put("tools", JSONArray().put(JSONObject().put("url_context", JSONObject())))
                     put("generationConfig", JSONObject().apply {
                         put("temperature", 0.0)
-                        put("responseMimeType", "application/json") // Force JSON output (Gemini 1.5+ supports)
+                        put("responseMimeType", "application/json") // 强制输出 JSON (Gemini 1.5+ 支持)
                     })
                 }
                 requestBody = root.toString()
 
             } else {
-                // --- OpenAI / Ollama Standard Format ---
+                // --- OpenAI / Ollama 标准格式 ---
                 url = if (config.apiUrl.contains("chat/completions")) config.apiUrl
                 else "${config.apiUrl.removeSuffix("/")}/chat/completions"
 
@@ -380,7 +380,7 @@ object Utils {
     }
 
     /**
-     * Helper function: Safely show Toast on main thread
+     * 辅助函数：安全地在主线程弹出 Toast
      */
     private fun showToastOnMain(context: Context, message: String) {
         Handler(Looper.getMainLooper()).post {
