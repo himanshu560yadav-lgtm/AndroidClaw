@@ -56,11 +56,10 @@ class MyAiAccessibilityService : AccessibilityService() {
         val screenWidth = metrics.widthPixels
         val screenHeight = metrics.heightPixels
 
-        val startX = screenWidth / 2
-        val startY: Int
-        val endX = screenWidth / 2
-        val endY: Int
-        val swipeDistance = (screenHeight * 0.4).toInt()
+        var startX = screenWidth / 2
+        var startY = screenHeight / 2
+        var endX = screenWidth / 2
+        var endY = screenHeight / 2
 
         when (direction.lowercase()) {
             "up" -> {
