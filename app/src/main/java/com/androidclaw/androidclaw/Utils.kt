@@ -190,10 +190,21 @@ object Utils {
             - input: Type text
             - intent: Open app/URL/settings
             
-            === APPS ===
-            - WhatsApp: package_name "com.whatsapp"
-            - YouTube: package_name "com.google.android.youtube"
-            - Any app: packageManager can launch it
+            === APPS (ALWAYS use package_name for intent) ===
+            - WhatsApp: "com.whatsapp"
+            - YouTube: "com.google.android.youtube"
+            - Chrome: "com.android.chrome"
+            - Messages: "com.google.android.apps.messaging" or "com.android.messaging"
+            - Phone/Dialer: "com.google.android.dialer" or "com.android.dialer"
+            - Contacts: "com.google.android.contacts" or "com.android.contacts"
+            - Settings: "com.android.settings"
+            - Camera: "com.android.camera" or "com.google.android.GoogleCamera"
+            - Files/Explorer: "com.google.android.documentsui" or "com.android.documentsui"
+            - Play Store: "com.android.vending"
+            - Gmail: "com.google.android.gm"
+            - Maps: "com.google.android.apps.maps"
+            - Instagram: "com.instagram.android"
+            - Facebook: "com.facebook.katana"
             
             EXAMPLES (ALWAYS OBEY):
             

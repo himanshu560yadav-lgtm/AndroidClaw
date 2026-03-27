@@ -5,6 +5,7 @@ import android.accessibilityservice.GestureDescription
 import android.graphics.Path
 import android.content.Context
 import android.graphics.Rect
+import android.hardware.camera2.CameraManager
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import android.view.Display
@@ -138,21 +139,23 @@ class MyAiAccessibilityService : AccessibilityService() {
 
     private fun toggleTorch(value: String?): Boolean {
         return try {
+            val cameraManager = getSystemService(Context.CAMERA_SERVICE) as CameraManager
+            val cameraId = cameraManager.cameraIdList[0]
             val newState = when (value?.lowercase()) {
-                "on", "true", "1" -> "1"
-                "off", "false", "0" -> "0"
-                else -> null // toggle
+                "on", "true", "1" -> true
+                "off", "false", "0" -> false
+                else -> true // default to on
             }
-            val cmd = if (newState != null) {
-                "settings put global flashlight_on $newState"
-            } else {
-                "input keyevent 223" // Toggle flashlight
-            }
-            execCommand(cmd)
-        } catch (e: Exception) {
-            // Fallback: open torch app
-            openApp("com.android.camera")
+            cameraManager.setTorchMode(cameraId, newState)
             true
+        } catch (e: Exception) {
+            try {
+                val newState = if (value?.lowercase() == "off") "0" else "1"
+                execCommand("settings put global flashlight_on $newState")
+            } catch (e2: Exception) {
+                openApp("com.android.camera")
+                true
+            }
         }
     }
 
@@ -186,10 +189,14 @@ class MyAiAccessibilityService : AccessibilityService() {
 
     private fun lockScreen(): Boolean {
         return try {
-            execCommand("input keyevent 26") // KEYCODE_POWER
-            true
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+                performGlobalAction(GLOBAL_ACTION_LOCK_SCREEN)
+            } else {
+                execCommand("input keyevent 26")
+                true
+            }
         } catch (e: Exception) {
-            execCommand("locksettings set-disabled true && input keyevent 26")
+            false
         }
     }
 
