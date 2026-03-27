@@ -166,6 +166,7 @@ object Utils {
             { "type": "system", "system_action": "ACTION", "system_value": "on/off/toggle", "reason": "Doing it" }
             
             System Actions:
+            - back, home, recents, notifications, quick_settings
             - torch/flashlight: on, off, toggle
             - wifi: on, off, toggle
             - bluetooth: on, off, toggle
