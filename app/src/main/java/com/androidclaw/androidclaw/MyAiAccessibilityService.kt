@@ -72,13 +72,11 @@ class MyAiAccessibilityService : AccessibilityService() {
                 endY = (screenHeight * 0.7).toInt()
             }
             "left" -> {
-                startX.let { }
                 startY = screenHeight / 2
                 endX = (screenWidth * 0.8).toInt()
                 endY = screenHeight / 2
             }
             "right" -> {
-                startX.let { }
                 startY = screenHeight / 2
                 endX = (screenWidth * 0.2).toInt()
                 endY = screenHeight / 2
