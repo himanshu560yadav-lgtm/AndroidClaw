@@ -1,68 +1,68 @@
-package com.androidclaw.androidclaw.model
+package com.himanshu.himanshu.model
 
 import android.content.Intent
 import com.google.gson.annotations.SerializedName
 
-// AI 返回的操作模型
+// AI returned action model
 data class AiAction(
     /**
-     * 操作类型: "intent", "click", "sh", "finish", "error"
+     * Action type: "intent", "click", "sh", "finish", "error"
      */
     @SerializedName("type")
     val type: String = "error",
 
     /**
-     * AI 对当前任务进度的总结（有助于保持会话状态）
+     * AI's summary of current task progress (helps maintain conversation state)
      */
     @SerializedName("progress")
     val progress: String? = null,
 
     /**
-     * 执行此操作的原因（以用户语言显示在聊天气泡中）
+     * Reason for executing this action (displayed in chat bubble in user's language)
      */
     @SerializedName("reason")
     val reason: String? = null,
 
     val data: String? = null, // Used for Uri (e.g., https://youtube.com)
     /**
-     * Intent 的 Action 字符串 (如 "android.intent.action.VIEW")
+     * Intent Action string (e.g., "android.intent.action.VIEW")
      */
     @SerializedName("action")
     val action: String? = null,
 
     /**
-     * Intent 的参数键值对
-     * AI 传回的数字通常会被解析为 Double，布尔值为 Boolean
+     * Intent parameters key-value pairs
+     * AI returned numbers are usually parsed as Double, boolean values as Boolean
      */
     @SerializedName("extras")
     val extras: Map<String, Any>? = null,
 
     /**
-     * 点击操作的 X 坐标
+     * X coordinate for click operation
      */
     @SerializedName("x")
     val x: Int = 0,
 
     /**
-     * 点击操作的 Y 坐标
+     * Y coordinate for click operation
      */
     @SerializedName("y")
     val y: Int = 0,
 
     /**
-     * Shell 脚本内容 (如 "input tap 500 500" 或系统设置命令)
+     * Shell script content (e.g., "input tap 500 500" or system settings commands)
      */
     @SerializedName("command")
     val command: String? = null,
 
     /**
-     * 可选：目标应用的包名（用于显式启动）
+     * Optional: Target app's package name (for explicit launch)
      */
     @SerializedName("package_name")
     val packageName: String? = null,
 
     /**
-     * 可选：目标 Activity 的类名
+     * Optional: Target Activity's class name
      */
     @SerializedName("class_name")
     val className: String? = null
@@ -76,8 +76,8 @@ data class AiAction(
     }
 
     /**
-     * 辅助方法：将 Map 中的 extras 填充到 Intent 中
-     * 处理了 AI 常见的 Double 转 Int 的问题
+     * Helper method: Fill extras from Map into Intent
+     * Handles the common AI issue of Double to Int conversion
      */
     fun fillIntentExtras(intent: Intent) {
         extras?.forEach { (key, value) ->
@@ -86,7 +86,7 @@ data class AiAction(
                 is String -> intent.putExtra(key, value)
                 is Int -> intent.putExtra(key, value)
                 is Double -> {
-                    // AI 返回的 JSON 数字通常解析为 Double，需尝试转为 Int
+                    // AI returned JSON numbers are usually parsed as Double, try to convert to Int
                     if (value == value.toInt().toDouble()) {
                         intent.putExtra(key, value.toInt())
                     } else {
@@ -100,7 +100,7 @@ data class AiAction(
     }
 }
 
-// UI 状态模型
+// UI state model
 data class AgentUiState(
     val isRunning: Boolean = false,
     val status: String = "waiting command...",
@@ -108,7 +108,7 @@ data class AgentUiState(
     val aiProvider: String = "Gemini" // Gemini, OpenAI, Local
 )
 
-// API 配置
+// API configuration
 data class ApiConfig(
     val provider: String = "Gemini", // Gemini, OpenAI, Ollama
     val apiKey: String = "",
@@ -116,7 +116,7 @@ data class ApiConfig(
     val model: String = "gemini-3-flash-preview"
 )
 
-// 聊天消息
+// Chat message
 data class ChatMessage(
     val role: String, // "user", "ai", "system"
     val content: String,

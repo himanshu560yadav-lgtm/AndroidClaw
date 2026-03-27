@@ -1,4 +1,4 @@
-package com.androidclaw.androidclaw
+package com.himanshu.himanshu
 
 object ShellUtils {
     fun executeCommand(command: String, useRoot: Boolean): Boolean {

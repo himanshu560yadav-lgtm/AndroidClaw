@@ -1,4 +1,4 @@
-package com.androidclaw.androidclaw.ui.view
+package com.himanshu.himanshu.ui.view
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -18,8 +18,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.androidclaw.androidclaw.model.AiAction
-import com.androidclaw.androidclaw.model.ChatMessage
+import com.himanshu.himanshu.model.AiAction
+import com.himanshu.himanshu.model.ChatMessage
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -44,38 +44,38 @@ fun ChatBubble(msg: ChatMessage, onConfirmAction: (AiAction) -> Unit) {
             shape = RoundedCornerShape(12.dp)
         ) {
             Column(modifier = Modifier.padding(12.dp)) {
-                // 显示 AI 的理由（用户语言）
+                // Show AI's reason (user language)
                 Text(text = msg.content, style = MaterialTheme.typography.bodyMedium)
 
-                // 如果有具体的 Action，显示详情
+                // If there is a specific action, show details
                 msg.action?.let { action ->
                     Spacer(modifier = Modifier.height(8.dp))
                     HorizontalDivider()
                     Text(
-                        text = "执行操作: ${action.type.uppercase()}",
+                        text = "Executing: ${action.type.uppercase()}",
                         style = MaterialTheme.typography.labelSmall,
                         color = Color.Gray
                     )
 
-                    // 如果是点击或 Shell，显示额外信息
+                    // If click or Shell, show extra info
                     if (action.type == "click") Text(
-                        "坐标: (${action.x}, ${action.y})",
+                        "Coordinates: (${action.x}, ${action.y})",
                         style = MaterialTheme.typography.labelSmall
                     )
                     if (action.type == "sh") Text(
-                        "指令: ${action.command}",
+                        "Command: ${action.command}",
                         style = MaterialTheme.typography.labelSmall,
                         color = Color.Red
                     )
 
-                    // 敏感操作的快捷确认按钮（如果在 Chat 中需要确认）
+                    // Shortcut confirmation button for sensitive actions
                     if (action.type == "click" || action.type == "sh") {
                         Button(
                             onClick = { onConfirmAction(action) },
                             modifier = Modifier.padding(top = 8.dp).height(32.dp),
                             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp)
                         ) {
-                            Text("立即执行", style = MaterialTheme.typography.labelMedium)
+                            Text("Run Now", style = MaterialTheme.typography.labelMedium)
                         }
                     }
                 }

@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.androidclaw.androidclaw"
+    namespace = "com.himanshu.himanshu"  // FIXED
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.androidclaw.androidclaw"
+        applicationId = "com.himanshu.himanshu"
         minSdk = 24
         targetSdk = 36
         versionCode = 1
@@ -37,6 +37,9 @@ android {
     buildFeatures {
         compose = true
     }
+//    compilerOptions {
+//        jvmTarget.set(JvmTarget.JVM_17)
+//    }
 }
 
 dependencies {

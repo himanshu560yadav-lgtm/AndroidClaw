@@ -1,4 +1,4 @@
-package com.androidclaw.androidclaw.ui.theme
+package com.himanshu.himanshu.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

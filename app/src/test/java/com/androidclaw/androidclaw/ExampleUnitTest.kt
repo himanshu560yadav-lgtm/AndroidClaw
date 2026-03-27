@@ -1,4 +1,4 @@
-package com.androidclaw.androidclaw
+package com.himanshu.himanshu
 
 import org.junit.Test
 

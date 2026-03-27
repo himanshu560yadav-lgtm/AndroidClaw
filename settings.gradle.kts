@@ -24,5 +24,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "AndroidClaw"
+rootProject.name = "Himanshu"
 include(":app")

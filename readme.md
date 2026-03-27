@@ -1,6 +1,6 @@
 # Himanshu AI Agent
 
-**Himanshu** is an intelligent Android automation assistant powered by Large Language Models (LLMs) such as Google Gemini, OpenAI GPT, and local Ollama instances. Unlike traditional automation tools, AndroidClaw "understands" your natural language commands, "perceives" your screen content, and "acts" by making logical decisions to complete tasks.
+**Himanshu** is an intelligent Android automation assistant powered by Large Language Models (LLMs) such as Google Gemini, OpenAI GPT, and local Ollama instances. Unlike traditional automation tools, Himanshu "understands" your natural language commands, "perceives" your screen content, and "acts" by making logical decisions to complete tasks.
 
 ## 🚀 Key Features
 
@@ -24,7 +24,7 @@
 
 <video width="300" controls>
   <source src="./assets/show.mp4" type="video/mp4">
-  Your browser does not support video playback.
+  您的浏览器不支持视频播放。
 </video>
 
 
