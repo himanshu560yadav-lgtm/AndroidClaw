@@ -3,10 +3,12 @@ package com.androidclaw.androidclaw
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.GestureDescription
 import android.graphics.Path
+import android.content.Context
 import android.graphics.Rect
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import android.view.Display
+import android.view.WindowManager
 
 
 class MyAiAccessibilityService : AccessibilityService() {
@@ -50,7 +52,8 @@ class MyAiAccessibilityService : AccessibilityService() {
     }
 
     fun performScroll(direction: String) {
-        val display: Display = windowManager?.defaultDisplay ?: return
+        val wm = getSystemService(Context.WINDOW_SERVICE) as WindowManager
+        val display: Display = wm.defaultDisplay
         val metrics = android.util.DisplayMetrics()
         display.getRealMetrics(metrics)
         val screenWidth = metrics.widthPixels
