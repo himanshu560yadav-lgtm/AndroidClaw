@@ -283,12 +283,14 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            "click", "sh" -> {
-                // Only when AI decides to click, if currently still in this App interface,
-                // it is suggested to add a logic: if AI wants to click a desktop element,
-                // it should have already jumped out via Intent.
-                pendingAction = action
-                uiState = uiState.copy(status = "Awaiting authorization for ${action.type}")
+            "click", "sh", "scroll", "system" -> {
+                // System actions like back/home don't need confirmation
+                if (action.type == "system") {
+                    performConfirmedAction(action)
+                } else {
+                    pendingAction = action
+                    uiState = uiState.copy(status = "Awaiting authorization for ${action.type}")
+                }
             }
 
             "finish" -> {
@@ -322,6 +324,17 @@ class MainActivity : ComponentActivity() {
                     }
                     "sh" -> {
                         success = ShellUtils.executeCommand(action.command ?: "", useRoot = true)
+                    }
+                    "scroll" -> {
+                        withContext(Dispatchers.Main) {
+                            MyAiAccessibilityService.instance?.performScroll(action.direction ?: "down")
+                        }
+                        success = true
+                    }
+                    "system" -> {
+                        withContext(Dispatchers.Main) {
+                            success = MyAiAccessibilityService.instance?.performSystemAction(action.action ?: "") ?: false
+                        }
                     }
                 }
             } catch (e: Exception) {

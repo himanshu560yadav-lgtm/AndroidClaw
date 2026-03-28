@@ -160,11 +160,13 @@ object Utils {
             
             
             Rules:
-            1. Use 'intent' for system-wide actions. This is the HIGHEST priority.
-            2. Use 'click' for UI interaction.
-            3. Use 'sh' for root-level shell commands.
-            4. Use 'finish' when the task is done.
-            5. Return ONLY a valid JSON object.
+            1. Use 'intent' for system-wide actions (opening apps, URLs).
+            2. Use 'click' for UI interaction (taping buttons, send buttons).
+            3. Use 'scroll' (up, down, left, right) to see more content.
+            4. Use 'system' for navigation (back, home, recents, notifications, quick_settings).
+            5. Use 'sh' for root-level shell commands.
+            6. Use 'finish' when the task is done.
+            7. Return ONLY a valid JSON object.
             
             Intent Guide:
             - To open a website or app like YouTube, use:
@@ -181,11 +183,12 @@ object Utils {
             {
               "progress": "Short summary of progress",
               "reason": "Why this step?",
-              "type": "intent" | "click" | "sh" | "finish",
-              "action": "android.intent.action.VIEW",
+              "type": "intent" | "click" | "sh" | "scroll" | "system" | "finish",
+              "action": "android.intent.action.VIEW" | "back" | "home" | "recents",
               "data": "optional URI string",
               "extras": {},
               "x": 0, "y": 0,
+              "direction": "up" | "down" | "left" | "right",
               "command": ""
             }
         """.trimIndent()

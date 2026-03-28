@@ -6,7 +6,7 @@ import com.google.gson.annotations.SerializedName
 // AI returned action model
 data class AiAction(
     /**
-     * Action type: "intent", "click", "sh", "finish", "error"
+     * Action type: "intent", "click", "swipe", "scroll", "system", "sh", "finish", "error"
      */
     @SerializedName("type")
     val type: String = "error",
@@ -50,6 +50,12 @@ data class AiAction(
     val y: Int = 0,
 
     /**
+     * Scroll direction: "up", "down", "left", "right"
+     */
+    @SerializedName("direction")
+    val direction: String? = null,
+
+    /**
      * Shell script content (e.g., "input tap 500 500" or system settings commands)
      */
     @SerializedName("command")
@@ -70,6 +76,9 @@ data class AiAction(
     companion object {
         const val TYPE_INTENT = "intent"
         const val TYPE_CLICK = "click"
+        const val TYPE_SWIPE = "swipe"
+        const val TYPE_SCROLL = "scroll"
+        const val TYPE_SYSTEM = "system"
         const val TYPE_SH = "sh"
         const val TYPE_FINISH = "finish"
         const val TYPE_ERROR = "error"

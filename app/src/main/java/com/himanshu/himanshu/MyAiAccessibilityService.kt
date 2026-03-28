@@ -2,8 +2,11 @@ package com.himanshu.himanshu
 
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.GestureDescription
+import android.content.Context
 import android.graphics.Path
 import android.graphics.Rect
+import android.view.Display
+import android.view.WindowManager
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 
@@ -36,6 +39,71 @@ class MyAiAccessibilityService : AccessibilityService() {
         val gesture = GestureDescription.Builder()
             .addStroke(GestureDescription.StrokeDescription(path, 0, 50)).build()
         dispatchGesture(gesture, null, null)
+    }
+
+    fun performSwipe(startX: Int, startY: Int, endX: Int, endY: Int, duration: Int = 300) {
+        val path = Path().apply {
+            moveTo(startX.toFloat(), startY.toFloat())
+            lineTo(endX.toFloat(), endY.toFloat())
+        }
+        val gesture = GestureDescription.Builder()
+            .addStroke(GestureDescription.StrokeDescription(path, 0, duration.toLong())).build()
+        dispatchGesture(gesture, null, null)
+    }
+
+    fun performScroll(direction: String) {
+        val wm = getSystemService(Context.WINDOW_SERVICE) as WindowManager
+        val display: Display = wm.defaultDisplay
+        val metrics = android.util.DisplayMetrics()
+        display.getRealMetrics(metrics)
+        val screenWidth = metrics.widthPixels
+        val screenHeight = metrics.heightPixels
+
+        var startX = screenWidth / 2
+        var startY = screenHeight / 2
+        var endX = screenWidth / 2
+        var endY = screenHeight / 2
+
+        when (direction.lowercase()) {
+            "up" -> {
+                startY = (screenHeight * 0.7).toInt()
+                endY = (screenHeight * 0.3).toInt()
+            }
+            "down" -> {
+                startY = (screenHeight * 0.3).toInt()
+                endY = (screenHeight * 0.7).toInt()
+            }
+            "left" -> {
+                startY = screenHeight / 2
+                endX = (screenWidth * 0.8).toInt()
+                endY = screenHeight / 2
+            }
+            "right" -> {
+                startY = screenHeight / 2
+                endX = (screenWidth * 0.2).toInt()
+                endY = screenHeight / 2
+            }
+            else -> return
+        }
+
+        performSwipe(startX, startY, endX, endY, 300)
+    }
+
+    fun performSystemAction(action: String): Boolean {
+        return when (action.lowercase()) {
+            "back" -> performGlobalAction(GLOBAL_ACTION_BACK)
+            "home" -> performGlobalAction(GLOBAL_ACTION_HOME)
+            "recents" -> performGlobalAction(GLOBAL_ACTION_RECENTS)
+            "notifications" -> performGlobalAction(GLOBAL_ACTION_NOTIFICATIONS)
+            "quick_settings" -> performGlobalAction(GLOBAL_ACTION_QUICK_SETTINGS)
+            "power_menu" -> performGlobalAction(GLOBAL_ACTION_POWER_DIALOG)
+            "lock_screen" -> {
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+                    performGlobalAction(GLOBAL_ACTION_LOCK_SCREEN)
+                } else false
+            }
+            else -> false
+        }
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {}
