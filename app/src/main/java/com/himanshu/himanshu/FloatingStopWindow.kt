@@ -1,4 +1,4 @@
-package com.androidclaw.androidclaw
+package com.himanshu.himanshu
 
 import android.content.Context
 import android.graphics.Color
@@ -15,7 +15,7 @@ class FloatingStopWindow(private val context: Context) {
     fun show(onStop: () -> Unit) {
         if (stopButton != null) return
 
-        // 1. Create button first
+        // 1. Create the button first
         val btn = Button(context)
         btn.text = "STOP"
         btn.setBackgroundColor(Color.RED)
@@ -23,14 +23,13 @@ class FloatingStopWindow(private val context: Context) {
         btn.setOnClickListener { onStop() }
         stopButton = btn
 
-        // 2. Explicitly create LayoutParams (avoid writing long parameters in constructor)
-        // Avoid K2 compiler parsing bug for complex constructors
+        // 2. Explicitly create LayoutParams
         val params = WindowManager.LayoutParams()
 
         params.width = WindowManager.LayoutParams.WRAP_CONTENT
         params.height = WindowManager.LayoutParams.WRAP_CONTENT
 
-        // Set layer: must use TYPE_APPLICATION_OVERLAY
+        // Set level: must use TYPE_APPLICATION_OVERLAY
         params.type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
 
         // Set flags: do not intercept focus

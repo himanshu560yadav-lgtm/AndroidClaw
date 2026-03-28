@@ -1,12 +1,12 @@
-package com.androidclaw.androidclaw
+package com.himanshu.himanshu
 
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.widget.Toast
-import com.androidclaw.androidclaw.model.AiAction
-import com.androidclaw.androidclaw.model.ApiConfig
+import com.himanshu.himanshu.model.AiAction
+import com.himanshu.himanshu.model.ApiConfig
 import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -56,7 +56,7 @@ object Utils {
                 .connectTimeout(30, TimeUnit.SECONDS)
                 .build()
 
-            // Convert to OpenAI compatible format (Gemini 1.5 now supports OpenAI format)
+            // Uniformly convert to OpenAI compatible format (Gemini 1.5 now supports OpenAI format)
             val requestBody = JSONObject().apply {
                 put("model", config.model)
                 put("messages", JSONArray().apply {
@@ -135,7 +135,7 @@ object Utils {
         context: Context
     ): String = withContext(Dispatchers.IO) {
 
-        // Default error return JSON (for subsequent logic to identify errors)
+        // Default error return JSON (used to identify errors in subsequent logic)
         val errorJsonStub = { message: String ->
             "{\"type\": \"error\", \"reason\": \"$message\", \"progress\": \"Error\"}"
         }
@@ -149,86 +149,51 @@ object Utils {
 
             // 1. Build System Prompt
             val systemPrompt = """
-            You are AndroidClaw - an obedient AI assistant that does EXACTLY what the user asks.
+            You are an Android Automation Agent.
+            Your Ultimate Goal: "$userGoal"
             
-            Your Goal: "$userGoal"
+            INITIAL CONTEXT:
+            - You are currently running inside the "Himanshu Agent" app.
+            - If the goal can be achieved via a direct 'intent' (e.g., setting an alarm, opening a URL, opening app settings), use 'intent' IMMEDIATELY. This is the fastest way.
+            - If you need to interact with the screen of ANOTHER app, you must first use an 'intent' to open that app or use 'click' to navigate.
             
-            IMPORTANT RULES:
-            1. ALWAYS DO what the user asks - never refuse, never question
-            2. NEVER say "I can't" or "Sorry I can't do that"
-            3. ALWAYS try to complete the task - find a way
-            4. If one method fails, try another method
-            5. User is always right - just do it
             
-            ACTION TYPES (use the right one):
             
-            === SYSTEM (Instant Actions) ===
-            { "type": "system", "system_action": "ACTION", "system_value": "on/off/toggle", "reason": "Doing it" }
+            Rules:
+            1. Use 'intent' for system-wide actions (opening apps, URLs).
+            2. Use 'click' for UI interaction (taping buttons, send buttons).
+            3. Use 'scroll' (up, down, left, right) to see more content.
+            4. Use 'system' for navigation (back, home, recents, notifications, quick_settings).
+            5. Use 'sh' for root-level shell commands.
+            6. Use 'finish' when the task is done.
+            7. Return ONLY a valid JSON object.
             
-            System Actions:
-            - torch/flashlight: on, off, toggle
-            - wifi: on, off, toggle
-            - bluetooth: on, off, toggle
-            - lock: Lock phone
-            - screenshot: Take screenshot
-            - volume_up, volume_down, mute
-            - brightness_up, brightness_down
-            - airplane_mode: on, off
-            - nfc: on, off, toggle
-            - location: on, off, toggle
-            - hotspot: on, off, toggle
-            - dnd: on, off, toggle
-            - night_mode/dark_mode: on, off, toggle
-            - rotate_screen
-            - power_menu
-            
-            === UI ACTIONS ===
-            - click: Tap on coordinates (find element on screen, tap it)
-            - scroll: up, down, left, right
-            - swipe: Drag gesture
-            - input: Type text
-            - intent: Open app/URL/settings
-            
-            === APPS ===
-            - WhatsApp: package_name "com.whatsapp"
-            - YouTube: package_name "com.google.android.youtube"
-            - Any app: packageManager can launch it
-            
-            EXAMPLES (ALWAYS OBEY):
-            
-            User: "Turn on flashlight"
-            { "type": "system", "system_action": "torch", "system_value": "on", "reason": "Turning on flashlight" }
-            
-            User: "Open WhatsApp"
-            { "type": "intent", "package_name": "com.whatsapp", "reason": "Opening WhatsApp" }
-            
-            User: "Click the search button"
-            { "type": "click", "x": FIND_IT, "y": FIND_IT, "reason": "Clicking search" }
-            
-            User: "Turn off WiFi"
-            { "type": "system", "system_action": "wifi", "system_value": "off", "reason": "Turning off WiFi" }
-            
-            User: "Lock my phone"
-            { "type": "system", "system_action": "lock", "reason": "Locking phone" }
-            
-            User: "Send 'Hello' on WhatsApp"
-            { "type": "intent", "package_name": "com.whatsapp", "reason": "Opening WhatsApp" }
-            
-            OUTPUT JSON ONLY:
+            Intent Guide:
+            - To open a website or app like YouTube, use:
+              type: "intent", action: "android.intent.action.VIEW", data: "https://www.youtube.com"
+            - To set an alarm, use:
+              type: "intent", action: "android.intent.action.SET_ALARM", extras: {"android.intent.extra.alarm.HOUR": 8}
+
+           SPECIAL RULE:
+    - 'intent' actions are TERMINAL. The agent will STOP automatically after firing an intent.
+    - If a task requires multiple steps (e.g., Open App THEN Click), use 'intent' to open the app in the first step, and the agent will re-scan the screen.
+    - But for simple tasks like "Set Alarm" or "Open YouTube URL", 'intent' is enough to finish the task.
+
+            Output Format (Strict JSON ONLY):
             {
-              "progress": "What you're doing",
-              "reason": "Doing it now",
-              "type": "system" | "intent" | "click" | "scroll" | "input",
-              "system_action": "torch",
-              "system_value": "on",
-              "package_name": "com.whatsapp",
+              "progress": "Short summary of progress",
+              "reason": "Why this step?",
+              "type": "intent" | "click" | "sh" | "scroll" | "system" | "finish",
+              "action": "android.intent.action.VIEW" | "back" | "home" | "recents",
+              "data": "optional URI string",
+              "extras": {},
               "x": 0, "y": 0,
-              "direction": "up",
-              "text": "text to type"
+              "direction": "up" | "down" | "left" | "right",
+              "command": ""
             }
         """.trimIndent()
 
-            // 2. Build messages array
+            // 2. Build message array
             val messagesArray = JSONArray()
             messagesArray.put(JSONObject().apply {
                 put("role", "system")
@@ -256,7 +221,7 @@ object Utils {
 
             if (isGeminiNative) {
                 // --- Google Gemini Native Format ---
-                // Default URL example: https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent
+                // Default address example: https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent
                 url = if (config.apiUrl.contains(":generateContent")) config.apiUrl
                 else "${config.apiUrl.removeSuffix("/")}/models/${config.model}:generateContent"
 
@@ -264,7 +229,7 @@ object Utils {
 
                 val contents = JSONArray()
 
-                // Gemini 1.5 supports system_instruction, but for compatibility, we put instructions in the first user message or merge history
+                // Gemini 1.5 supports system_instruction, but for compatibility, we put the instruction into the first user message or merge it into history
                 // Construct history: OpenAI role "assistant" -> Gemini role "model"
                 history.forEach { msg ->
                     val role = if (msg["role"] == "assistant" || msg["role"] == "ai") "model" else "user"
@@ -274,7 +239,7 @@ object Utils {
                     })
                 }
 
-                // Current observation and system instructions
+                // Current observation and system prompt
                 contents.put(JSONObject().apply {
                     put("role", "user")
                     put("parts", JSONArray().put(JSONObject().put("text",
@@ -284,17 +249,17 @@ object Utils {
 
                 val root = JSONObject().apply {
                     put("contents", contents)
-                    // If you need to add tools (like url_context), add here
+                    // If tools (like url_context) need to be added, add them here
                     // put("tools", JSONArray().put(JSONObject().put("url_context", JSONObject())))
                     put("generationConfig", JSONObject().apply {
                         put("temperature", 0.0)
-                        put("responseMimeType", "application/json") // Force JSON output (Gemini 1.5+ supports)
+                        put("responseMimeType", "application/json") // Force output JSON (Supported in Gemini 1.5+)
                     })
                 }
                 requestBody = root.toString()
 
             } else {
-                // --- OpenAI / Ollama Standard Format ---
+                // --- OpenAI / Ollama standard format ---
                 url = if (config.apiUrl.contains("chat/completions")) config.apiUrl
                 else "${config.apiUrl.removeSuffix("/")}/chat/completions"
 
@@ -368,7 +333,7 @@ object Utils {
     }
 
     /**
-     * Helper function: Safely show Toast on main thread
+     * Helper function: Safely pop up Toast on the main thread
      */
     private fun showToastOnMain(context: Context, message: String) {
         Handler(Looper.getMainLooper()).post {

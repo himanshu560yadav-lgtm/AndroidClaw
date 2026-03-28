@@ -1,4 +1,4 @@
-package com.androidclaw.androidclaw.model
+package com.himanshu.himanshu.model
 
 import android.content.Intent
 import com.google.gson.annotations.SerializedName
@@ -6,7 +6,7 @@ import com.google.gson.annotations.SerializedName
 // AI returned action model
 data class AiAction(
     /**
-     * Action type: "intent", "click", "swipe", "scroll", "input", "sh", "finish", "error"
+     * Action type: "intent", "click", "swipe", "scroll", "system", "sh", "finish", "error"
      */
     @SerializedName("type")
     val type: String = "error",
@@ -50,46 +50,10 @@ data class AiAction(
     val y: Int = 0,
 
     /**
-     * Swipe/Scroll: Start X coordinate
-     */
-    @SerializedName("startX")
-    val startX: Int = 0,
-
-    /**
-     * Swipe/Scroll: Start Y coordinate
-     */
-    @SerializedName("startY")
-    val startY: Int = 0,
-
-    /**
-     * Swipe/Scroll: End X coordinate
-     */
-    @SerializedName("endX")
-    val endX: Int = 0,
-
-    /**
-     * Swipe/Scroll: End Y coordinate
-     */
-    @SerializedName("endY")
-    val endY: Int = 0,
-
-    /**
-     * Swipe/Scroll: Duration in milliseconds
-     */
-    @SerializedName("duration")
-    val duration: Int = 300,
-
-    /**
      * Scroll direction: "up", "down", "left", "right"
      */
     @SerializedName("direction")
     val direction: String? = null,
-
-    /**
-     * Text to input (for input action)
-     */
-    @SerializedName("text")
-    val text: String? = null,
 
     /**
      * System action (for system action): torch, wifi, bluetooth, lock, screenshot, volume, etc.
@@ -126,7 +90,6 @@ data class AiAction(
         const val TYPE_CLICK = "click"
         const val TYPE_SWIPE = "swipe"
         const val TYPE_SCROLL = "scroll"
-        const val TYPE_INPUT = "input"
         const val TYPE_SYSTEM = "system"
         const val TYPE_SH = "sh"
         const val TYPE_FINISH = "finish"

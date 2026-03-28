@@ -1,4 +1,4 @@
-package com.androidclaw.androidclaw.ui.view
+package com.himanshu.himanshu.ui.view
 
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -37,14 +37,14 @@ fun InputArea(
     isRecording: Boolean,
     modifier: Modifier = Modifier
 ) {
-    // Internal management of input text content
+    // Internal management of input box text content
     var inputText by remember { mutableStateOf("") }
 
     Surface(
         modifier = modifier
             .fillMaxWidth()
-            .imePadding(), // Auto handle keyboard popup spacing
-        tonalElevation = 3.dp, // Slightly elevate to distinguish from chat list
+            .imePadding(), // Automatically handle spacing when keyboard pops up
+        tonalElevation = 3.dp, // Slightly increase elevation to distinguish from chat list
         shadowElevation = 8.dp
     ) {
         Row(
@@ -61,7 +61,7 @@ fun InputArea(
                 Icon(
                     imageVector = if (isRecording) Icons.Default.Close else Icons.Default.AddCircle,
                     contentDescription = "Voice Input",
-                    // Show red during recording as warning
+                    // Show red during recording to remind
                     tint = if (isRecording) Color.Red else MaterialTheme.colorScheme.primary
                 )
             }
@@ -74,8 +74,8 @@ fun InputArea(
                 modifier = Modifier
                     .weight(1f)
                     .padding(horizontal = 4.dp),
-                maxLines = 4, // Max 4 lines auto growth
-                shape = RoundedCornerShape(24.dp), // Rounded design, more like chat apps
+                maxLines = 4, // Support up to 4 lines of automatic growth
+                shape = RoundedCornerShape(24.dp), // Rounded design, more like chat software
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = Color.Transparent,
                     unfocusedBorderColor = Color.Transparent,
@@ -89,10 +89,10 @@ fun InputArea(
                 onClick = {
                     if (inputText.isNotBlank()) {
                         onSend(inputText)
-                        inputText = "" // Clear input after clicking
+                        inputText = "" // Clear input box after clicking
                     }
                 },
-                // Disable send when input is empty or recording
+                // Disable sending when input is empty or recording
                 enabled = inputText.isNotBlank() && !isRecording,
                 modifier = Modifier.size(48.dp)
             ) {
