@@ -56,6 +56,18 @@ data class AiAction(
     val direction: String? = null,
 
     /**
+     * System action (for system action): torch, wifi, bluetooth, lock, screenshot, volume, etc.
+     */
+    @SerializedName("system_action")
+    val systemAction: String? = null,
+
+    /**
+     * System action value (on/off/toggle, up/down, etc.)
+     */
+    @SerializedName("system_value")
+    val systemValue: String? = null,
+
+    /**
      * Shell script content (e.g., "input tap 500 500" or system settings commands)
      */
     @SerializedName("command")

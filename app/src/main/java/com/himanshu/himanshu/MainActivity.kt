@@ -333,7 +333,10 @@ class MainActivity : ComponentActivity() {
                     }
                     "system" -> {
                         withContext(Dispatchers.Main) {
-                            success = MyAiAccessibilityService.instance?.performSystemAction(action.action ?: "") ?: false
+                            success = MyAiAccessibilityService.instance?.performSystemAction(
+                                action.systemAction ?: action.action ?: "",
+                                action.systemValue
+                            ) ?: false
                         }
                     }
                 }
@@ -418,15 +421,43 @@ class MainActivity : ComponentActivity() {
         override fun onBeginningOfSpeech() {}
         override fun onRmsChanged(rmsdB: Float) {}
         override fun onBufferReceived(buffer: ByteArray?) {}
-        override fun onEndOfSpeech() { isRecording = false }
+        override fun onEndOfSpeech() {
+            if (isRecording) {
+                // Keep listening if recording state is still active
+                val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                    putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                    putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
+                }
+                speechRecognizer?.startListening(intent)
+            }
+        }
         override fun onError(error: Int) {
-            isRecording = false
-            addMessage("system", "Voice Recognition Error: $error")
+            if (error == SpeechRecognizer.ERROR_NO_MATCH || error == SpeechRecognizer.ERROR_SPEECH_TIMEOUT) {
+                // Restart listening on timeout/no match
+                if (isRecording) {
+                    val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                        putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                        putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
+                    }
+                    speechRecognizer?.startListening(intent)
+                }
+            } else {
+                isRecording = false
+                addMessage("system", "Voice Recognition Error: $error")
+            }
         }
         override fun onResults(results: Bundle?) {
             val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
             if (!matches.isNullOrEmpty()) {
                 startAgent(matches[0])
+            }
+            // Continuous listening: restart after results
+            if (isRecording) {
+                val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                    putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                    putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
+                }
+                speechRecognizer?.startListening(intent)
             }
         }
         override fun onPartialResults(partialResults: Bundle?) {}
